@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AudienceIntel — Discover what your audience really struggles with</title>
+<meta name="description" content="AI-powered market research. Discover the top problems your target audience discusses on Reddit — analyzed by Claude in under 60 seconds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c1015;--bg2:#13181f;--bg3:#1a2029;--bg4:#222b36;--bg5:#2c3645;
+  --ink:#edeae2;--ink2:#b8b4ab;--ink3:#7a7670;--ink4:#484642;
+  --teal:#2dd4bf;--teal-d:#14b8a6;--teal-bg:rgba(45,212,191,.08);--teal-bd:rgba(45,212,191,.22);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,.1);--amber-bd:rgba(245,158,11,.25);
+  --red:#f87171;--red-bg:rgba(248,113,113,.08);--red-bd:rgba(248,113,113,.25);
+  --green:#4ade80;--green-bg:rgba(74,222,128,.08);
+  --purple:#a78bfa;--orange:#fb923c;--blue:#60a5fa;
+  --br:rgba(237,234,226,.07);--br2:rgba(237,234,226,.13);--br3:rgba(237,234,226,.2);
+  --r:10px;--rl:14px;--rxl:20px;
+  --f-serif:'Playfair Display',Georgia,serif;
+  --f-sans:'Plus Jakarta Sans',system-ui,sans-serif;
+  --f-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--f-sans);background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
+a{color:var(--teal);text-decoration:none}a:hover{text-decoration:underline}
+code{font-family:var(--f-mono);font-size:0.85em;background:var(--bg3);padding:1px 5px;border-radius:4px;color:var(--teal)}
+
+/* ─── LAYOUT ─── */
+.shell{display:flex;min-height:100vh}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:248px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--br);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;transition:transform .3s ease}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:10px}
+.sb-logo-icon{width:28px;height:28px;background:var(--teal);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-logo-icon svg{width:15px;height:15px;color:var(--bg)}
+.sb-logo-name{font-family:var(--f-serif);font-size:1.1rem;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.sb-nav{padding:12px 8px;flex:1}
+.sb-section{font-size:10px;font-family:var(--f-mono);letter-spacing:.1em;color:var(--ink3);text-transform:uppercase;padding:0 10px;margin:14px 0 5px}
+.sb-section:first-child{margin-top:0}
+.sb-btn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:8px;border:none;background:transparent;color:var(--ink2);font-size:13px;font-family:var(--f-sans);cursor:pointer;text-align:left;transition:background .15s,color .15s;line-height:1.4}
+.sb-btn:hover{background:var(--bg3);color:var(--ink)}
+.sb-btn.on{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd)}
+.sb-btn svg{width:14px;height:14px;flex-shrink:0;opacity:.7}
+.sb-btn.on svg{opacity:1}
+.sb-empty{font-size:12px;color:var(--ink4);padding:6px 10px;font-style:italic}
+.si{padding:7px 10px;border-radius:8px;cursor:pointer;transition:background .15s;margin-bottom:1px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+.si:hover{background:var(--bg3)}
+.si:hover .si-del{opacity:1}
+.si-main{flex:1;min-width:0}
+.si-name{font-size:12px;color:var(--ink);font-weight:500;line-height:1.3;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si-meta{font-size:10px;color:var(--ink3);font-family:var(--f-mono)}
+.si-del{opacity:0;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:15px;padding:0 2px;transition:opacity .15s,color .15s;flex-shrink:0;line-height:1;margin-top:1px}
+.si-del:hover{color:var(--red)}
+.sb-foot{padding:14px 18px;border-top:1px solid var(--br)}
+.sb-reddit{display:flex;align-items:center;gap:7px;font-size:11px;font-family:var(--f-mono);color:var(--ink3);margin-bottom:10px;cursor:pointer;transition:color .15s}
+.sb-reddit:hover{color:var(--ink)}
+.sb-rdot{width:6px;height:6px;border-radius:50%;background:var(--ink4);flex-shrink:0;transition:background .3s}
+.sb-rdot.on{background:var(--teal)}
+.sb-settings{display:flex;align-items:center;gap:7px;width:100%;background:none;border:none;color:var(--ink3);font-size:12px;font-family:var(--f-sans);cursor:pointer;padding:5px 0;transition:color .15s}
+.sb-settings:hover{color:var(--ink)}
+.sb-settings svg{width:13px;height:13px}
+
+/* ─── MAIN ─── */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{padding:13px 36px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:10;gap:12px}
+.tb-left{display:flex;align-items:center;gap:10px}
+.tb-title{font-family:var(--f-serif);font-size:.95rem;color:var(--ink2);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.tb-status{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--f-mono);color:var(--ink3)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+.sdot.busy{animation:pulse 1.3s ease-in-out infinite}
+.menu-btn{display:none;background:none;border:none;color:var(--ink2);cursor:pointer;padding:2px;align-items:center}
+.menu-btn svg{width:18px;height:18px}
+.reddit-topbtn{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--br2);color:var(--ink2);font-size:12px;font-family:var(--f-sans);padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.reddit-topbtn:hover{border-color:var(--teal-bd);color:var(--teal);background:var(--teal-bg)}
+.reddit-topbtn.on{border-color:var(--teal-bd);color:var(--teal);background:var(--teal-bg)}
+.reddit-topbtn svg{width:13px;height:13px}
+
+/* ─── CONTENT ─── */
+.content{max-width:740px;margin:0 auto;padding:44px 36px 100px;width:100%}
+.view{display:none}.view.on{display:block}
+
+/* ─── ALERTS ─── */
+.alert{display:none;border-radius:var(--r);padding:12px 16px;margin-bottom:20px;font-size:13px;line-height:1.6}
+.alert.show{display:flex;align-items:flex-start;gap:10px}
+.alert-icon{flex-shrink:0;font-size:15px;margin-top:1px}
+.alert-error{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red)}
+.alert-cache{background:var(--teal-bg);border:1px solid var(--teal-bd);color:var(--teal);align-items:center;justify-content:space-between}
+.alert-cache button{background:none;border:none;color:var(--teal);cursor:pointer;font-size:12px;text-decoration:underline;font-family:var(--f-sans);flex-shrink:0}
+
+/* ─── HOME ─── */
+.hero{margin-bottom:36px}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-family:var(--f-mono);color:var(--teal);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero-kicker::before{content:'';display:block;width:20px;height:1px;background:var(--teal)}
+.hero h1{font-family:var(--f-serif);font-size:clamp(2rem,4.5vw,3.2rem);line-height:1.08;letter-spacing:-.025em;margin-bottom:14px;font-weight:600;color:var(--ink)}
+.hero h1 em{color:var(--teal);font-style:italic}
+.hero-sub{font-size:.95rem;color:var(--ink2);max-width:500px;line-height:1.75;font-weight:300}
+
+/* Setup steps (first-time onboarding) */
+.setup-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.setup-step{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);font-size:13px;color:var(--ink2);transition:border-color .2s}
+.setup-step.done{border-color:var(--teal-bd);background:var(--teal-bg)}
+.setup-step.done .ss-num{background:var(--teal);border-color:var(--teal);color:var(--bg)}
+.ss-num{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--ink4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:var(--f-mono);flex-shrink:0;color:var(--ink3);transition:all .2s}
+.ss-text{flex:1}
+.ss-action{font-size:12px;color:var(--teal);cursor:pointer;white-space:nowrap;text-decoration:underline;font-family:var(--f-mono)}
+
+/* Form */
+.form-card{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rl);padding:28px;margin-bottom:14px}
+.form-title{font-family:var(--f-serif);font-size:1.2rem;color:var(--ink);margin-bottom:4px;font-weight:600}
+.form-hint{font-size:12px;color:var(--ink3);margin-bottom:24px}
+.field{margin-bottom:18px}
+.field:last-of-type{margin-bottom:0}
+.fl{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:7px;letter-spacing:.01em}
+.fl span{font-weight:400;color:var(--ink3);margin-left:4px}
+.fi{width:100%;background:var(--bg);border:1px solid var(--br2);border-radius:9px;padding:11px 14px;color:var(--ink);font-family:var(--f-sans);font-size:14px;outline:none;transition:border-color .2s,background .2s;resize:none;line-height:1.5}
+.fi:focus{border-color:var(--teal);background:rgba(45,212,191,.02)}
+.fi::placeholder{color:var(--ink4)}
+
+/* Key drawer */
+.key-drawer{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.kd-trigger{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;transition:background .15s}
+.kd-trigger:hover{background:var(--bg3)}
+.kd-left{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink2)}
+.kd-left svg{width:14px;height:14px;color:var(--ink3)}
+.kd-status{font-size:11px;font-family:var(--f-mono);margin-left:4px;transition:color .2s}
+.kd-chevron{width:13px;height:13px;color:var(--ink3);transition:transform .2s;flex-shrink:0}
+.kd-chevron.open{transform:rotate(180deg)}
+.kd-body{display:none;padding:18px;border-top:1px solid var(--br)}
+.kd-body.open{display:block}
+.kd-hint{font-size:12px;color:var(--ink2);line-height:1.65;margin-bottom:14px;padding:11px 13px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:8px}
+.kd-wrap{position:relative}
+.kd-wrap label{display:block;font-size:10px;color:var(--ink3);font-family:var(--f-mono);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+.kd-wrap input{width:100%;background:var(--bg);border:1px solid var(--br2);border-radius:8px;padding:10px 42px 10px 14px;color:var(--ink);font-family:var(--f-mono);font-size:12px;outline:none;transition:border-color .2s}
+.kd-wrap input:focus{border-color:var(--teal)}
+.kd-eye{position:absolute;right:11px;bottom:10px;background:none;border:none;color:var(--ink3);cursor:pointer;padding:0;transition:color .15s}
+.kd-eye:hover{color:var(--ink)}
+.kd-eye svg{width:14px;height:14px}
+
+/* Buttons */
+.btn-run{width:100%;padding:15px 24px;background:var(--teal);color:var(--bg);border:none;border-radius:var(--r);font-family:var(--f-sans);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:9px;letter-spacing:.01em}
+.btn-run:hover{background:var(--teal-d)}
+.btn-run:active{transform:scale(.99)}
+.btn-run:disabled{background:var(--bg4);color:var(--ink3);cursor:not-allowed;transform:none}
+.btn-run svg{width:16px;height:16px}
+.btn-cancel{display:none;width:100%;margin-top:10px;padding:11px;background:none;border:1px solid var(--br2);border-radius:var(--r);font-family:var(--f-sans);font-size:13px;color:var(--ink3);cursor:pointer;transition:all .15s}
+.btn-cancel:hover{border-color:var(--red-bd);color:var(--red)}
+.btn-cancel.show{display:block}
+
+/* ─── PROGRESS ─── */
+.prog-card{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rl);padding:30px}
+.prog-title{font-family:var(--f-serif);font-size:1.5rem;color:var(--ink);margin-bottom:4px;font-style:italic}
+.prog-sub{font-size:12px;color:var(--ink3);margin-bottom:4px}
+.prog-eta{font-size:11px;font-family:var(--f-mono);color:var(--amber);margin-bottom:28px;display:flex;align-items:center;gap:6px}
+.ps{display:flex;align-items:flex-start;gap:14px;padding:12px 0;border-bottom:1px solid var(--br);transition:opacity .3s}
+.ps:last-child{border-bottom:none;padding-bottom:0}
+.ps.dim{opacity:.28}
+.ps-ic{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--br2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s;margin-top:1px}
+.ps.run .ps-ic{border-color:var(--teal);background:var(--teal-bg)}
+.ps.done .ps-ic{border-color:var(--teal);background:var(--teal);color:var(--bg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:11px;height:11px;border:1.5px solid rgba(45,212,191,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+.chk{font-size:11px;font-weight:700;color:var(--bg)}
+.ps-body{flex:1;min-width:0}
+.ps-title{font-size:13px;font-weight:500;color:var(--ink);line-height:1.4}
+.ps.dim .ps-title{color:var(--ink3)}
+.ps-detail{font-size:11px;font-family:var(--f-mono);color:var(--teal);margin-top:3px;min-height:15px;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.chip{font-size:10px;font-family:var(--f-mono);background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-bd);padding:2px 8px;border-radius:20px;opacity:0;transform:translateY(4px);animation:chipIn .2s forwards}
+.chip.dead{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd);text-decoration:line-through}
+@keyframes chipIn{to{opacity:1;transform:translateY(0)}}
+
+/* ─── RESULTS ─── */
+.res-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px;gap:16px;flex-wrap:wrap}
+.res-title{font-family:var(--f-serif);font-size:1.9rem;color:var(--ink);font-weight:600;letter-spacing:-.025em}
+.res-title em{color:var(--teal);font-style:italic}
+.res-meta{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
+.rpill{font-size:10px;font-family:var(--f-mono);color:var(--ink3);background:var(--bg3);border:1px solid var(--br);padding:2px 9px;border-radius:20px}
+.rpill.hi{color:var(--teal);background:var(--teal-bg);border-color:var(--teal-bd)}
+.res-acts{display:flex;gap:7px;flex-wrap:wrap}
+.ra{display:flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:12px;font-family:var(--f-sans);cursor:pointer;transition:all .15s;border:1px solid var(--br2);background:var(--bg2);color:var(--ink2);white-space:nowrap}
+.ra:hover{border-color:var(--teal-bd);color:var(--teal);background:var(--teal-bg)}
+.ra svg{width:13px;height:13px}
+
+/* Problem cards */
+.pcard{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rl);padding:22px 26px;margin-bottom:10px;opacity:0;transform:translateY(14px);animation:rise .4s forwards;position:relative;overflow:hidden}
+@keyframes rise{to{opacity:1;transform:translateY(0)}}
+.pcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:2px 0 0 2px}
+.pcard:nth-child(1)::before{background:var(--teal)}
+.pcard:nth-child(2)::before{background:var(--purple)}
+.pcard:nth-child(3)::before{background:var(--orange)}
+.pcard:nth-child(4)::before{background:var(--green)}
+.pcard:nth-child(5)::before{background:var(--blue)}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:12px}
+.pl{display:flex;align-items:flex-start;gap:13px;flex:1}
+.prank{font-family:var(--f-serif);font-size:2.5rem;color:var(--bg5);line-height:1;flex-shrink:0;font-style:italic;margin-top:-4px}
+.pname{font-family:var(--f-serif);font-size:1.15rem;color:var(--ink);font-weight:600;letter-spacing:-.015em;line-height:1.25;margin-bottom:4px}
+.psr{font-size:10px;font-family:var(--f-mono);color:var(--ink3)}
+.pbadges{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0}
+.bdg{font-size:10px;font-family:var(--f-mono);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.bdg-f{background:var(--bg3);color:var(--ink3);border:1px solid var(--br)}
+.bdg-h{background:var(--green-bg);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.bdg-m{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.pdesc{font-size:13px;color:var(--ink2);line-height:1.72;margin-bottom:14px}
+.qblock{background:var(--bg);border-left:2px solid var(--bg5);border-radius:0 7px 7px 0;padding:11px 14px}
+.qtext{font-size:13px;color:var(--ink3);font-style:italic;line-height:1.65;margin-bottom:5px}
+.qnote{font-size:10px;font-family:var(--f-mono);color:var(--bg5)}
+
+/* Next actions */
+.next-sec{margin-top:32px;padding-top:28px;border-top:1px solid var(--br)}
+.next-label{font-size:10px;font-family:var(--f-mono);color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.next-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ncard{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:flex-start;gap:11px}
+.ncard:hover{border-color:var(--teal-bd);background:var(--teal-bg)}
+.ncard.running{border-color:var(--teal-bd);background:var(--teal-bg);cursor:default}
+.nicon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.nc-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px;line-height:1.3}
+.nc-desc{font-size:11px;color:var(--ink3);line-height:1.45}
+
+/* Action result */
+.apanel{display:none;background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rl);margin-top:12px;overflow:hidden}
+.apanel.show{display:block}
+.apanel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--br)}
+.apanel-title{font-family:var(--f-serif);font-size:1.05rem;color:var(--ink);font-style:italic}
+.apanel-close{background:none;border:none;color:var(--ink3);font-size:19px;cursor:pointer;padding:0;line-height:1;transition:color .15s}
+.apanel-close:hover{color:var(--ink)}
+.apanel-body{padding:20px 18px;font-size:13px;color:var(--ink2);line-height:1.85;white-space:pre-wrap;min-height:80px}
+@keyframes blink{50%{opacity:0}}
+.cur{display:inline-block;width:2px;height:13px;background:var(--teal);margin-left:2px;animation:blink .8s step-end infinite;vertical-align:text-bottom}
+
+/* ─── MODALS ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,13,18,.9);z-index:100;align-items:center;justify-content:center;padding:20px}
+.overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--br2);border-radius:var(--rxl);padding:28px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:var(--f-serif);font-size:1.25rem;color:var(--ink);font-weight:600}
+.modal-close{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:20px;line-height:1;padding:0;transition:color .15s}
+.modal-close:hover{color:var(--ink)}
+.mtabs{display:flex;border:1px solid var(--br2);border-radius:8px;overflow:hidden;margin-bottom:20px}
+.mtab{flex:1;padding:9px;font-size:12px;font-family:var(--f-sans);font-weight:500;cursor:pointer;border:none;transition:all .15s;line-height:1}
+.mtab.on{background:var(--teal-bg);color:var(--teal)}
+.mtab.off{background:var(--bg);color:var(--ink3);border-left:1px solid var(--br2)}
+.mtab:first-child{border-left:none}
+.mpanel{display:none}.mpanel.on{display:block}
+.hint{font-size:12px;color:var(--ink2);line-height:1.65;margin-bottom:14px;padding:11px 13px;background:var(--teal-bg);border:1px solid var(--teal-bd);border-radius:8px}
+.kfield{position:relative;margin-bottom:12px}
+.kfield:last-of-type{margin-bottom:0}
+.kfield label{display:block;font-size:10px;color:var(--ink3);font-family:var(--f-mono);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase}
+.kfield input{width:100%;background:var(--bg);border:1px solid var(--br2);border-radius:8px;padding:10px 40px 10px 13px;color:var(--ink);font-family:var(--f-mono);font-size:12px;outline:none;transition:border-color .2s}
+.kfield input:focus{border-color:var(--teal)}
+.eye{position:absolute;right:10px;bottom:10px;background:none;border:none;color:var(--ink3);cursor:pointer;padding:0;transition:color .15s}
+.eye:hover{color:var(--ink)}
+.eye svg{width:14px;height:14px}
+.guide{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.gstep{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--br)}
+.gn{width:18px;height:18px;border-radius:50%;background:var(--teal-bg);border:1px solid var(--teal-bd);color:var(--teal);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--f-mono)}
+.gtxt{font-size:12px;color:var(--ink2);line-height:1.65}
+.reddit-status-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;margin-bottom:14px;font-size:11px;font-family:var(--f-mono);background:var(--bg3);border:1px solid var(--br)}
+.err-line{display:none;margin-top:10px;font-size:12px;color:var(--red);font-family:var(--f-mono);line-height:1.6}
+.mbtns{display:flex;gap:8px;margin-top:18px}
+.mbtn-p{flex:1;padding:10px;background:var(--teal);color:var(--bg);border:none;border-radius:8px;font-size:13px;font-family:var(--f-sans);font-weight:600;cursor:pointer;transition:background .15s}
+.mbtn-p:hover{background:var(--teal-d)}
+.mbtn-g{flex:1;padding:10px;background:none;border:1px solid var(--br2);border-radius:8px;font-size:13px;font-family:var(--f-sans);color:var(--ink3);cursor:pointer;transition:all .15s}
+.mbtn-g:hover{background:var(--bg3);color:var(--ink)}
+.export-ta{width:100%;background:var(--bg);border:1px solid var(--br2);border-radius:8px;padding:13px 14px;color:var(--ink2);font-family:var(--f-mono);font-size:11px;line-height:1.65;resize:none;outline:none;min-height:180px;margin-bottom:14px}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--bg3);color:var(--ink);border:1px solid var(--br2);font-size:13px;padding:9px 20px;border-radius:30px;font-family:var(--f-sans);transition:transform .28s;z-index:300;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:800px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:flex}
+  .content{padding:28px 20px 80px}
+  .topbar{padding:12px 20px}
+  .next-grid{grid-template-columns:1fr}
+  .pcard{padding:18px 20px}
+  .form-card{padding:22px}
+  .prog-card{padding:22px}
+  .res-header{flex-direction:column;gap:12px}
+}
+@media(max-width:480px){
+  .hero h1{font-size:1.85rem}
+  .res-title{font-size:1.6rem}
+  .tb-title{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2a6 6 0 100 12A6 6 0 008 2z"/><path d="M8 5v3.5l2.5 1.5"/>
+      </svg>
+    </div>
+    <div class="sb-logo-name">AudienceIntel</div>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-section">Workspace</div>
+    <button class="sb-btn on" id="nav-home" onclick="goHome()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+      New research
+    </button>
+
+    <div class="sb-section" id="saved-section-label" style="display:none;">Saved searches</div>
+    <div id="saved-list"></div>
+  </nav>
+
+  <div class="sb-foot">
+    <div class="sb-reddit" id="sb-reddit" onclick="openSettings('reddit')">
+      <div class="sb-rdot" id="sb-rdot"></div>
+      <span id="sb-reddit-txt">Reddit — not connected</span>
+    </div>
+    <button class="sb-settings" onclick="openSettings('anthropic')">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M11.54 4.46l1.41-1.41M3.05 12.95l1.41-1.41"/></svg>
+      Settings
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-left">
+      <button class="menu-btn" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+      </button>
+      <div class="tb-title" id="tb-title">New research session</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-status">
+        <div class="sdot" id="sdot"></div>
+        <span id="slabel">Ready</span>
+      </div>
+      <button class="reddit-topbtn" id="reddit-topbtn" onclick="openSettings('reddit')">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path d="M18 10c0-4.42-3.58-8-8-8S2 5.58 2 10c0 4.08 3.05 7.44 7 7.94V14H7v-2h2v-1.5c0-1.93 1.07-3 2.83-3 .82 0 1.67.15 1.67.15V9.5h-.94c-.93 0-1.22.58-1.22 1.17V12h2.08l-.33 2H11v3.94c3.95-.5 7-3.86 7-7.94z"/></svg>
+        <span id="reddit-topbtn-txt">Connect Reddit</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Alerts -->
+    <div class="alert alert-error" id="alert-error">
+      <span class="alert-icon">⚠</span>
+      <span id="alert-error-txt"></span>
+    </div>
+    <div class="alert alert-cache" id="alert-cache">
+      <span>⚡ Results loaded from cache — ran <span id="cache-age-txt"></span> ago</span>
+      <button onclick="runFresh()">Run fresh</button>
+    </div>
+
+    <!-- ══ HOME VIEW ══ -->
+    <div class="view on" id="view-home">
+
+      <div class="hero">
+        <div class="hero-kicker">AI market research</div>
+        <h1>Know what your audience<br><em>actually</em> struggles with</h1>
+        <p class="hero-sub">Describe your audience and how you want to help them. AudienceIntel scours Reddit, analyzes thousands of posts with Claude, and surfaces the top 5 real problems — in under 60 seconds.</p>
+      </div>
+
+      <!-- First-time setup steps -->
+      <div class="setup-steps" id="setup-steps">
+        <div class="setup-step" id="ss1">
+          <div class="ss-num" id="ss1-num">1</div>
+          <div class="ss-text">Add your <strong>Anthropic API key</strong> — free at console.anthropic.com, includes ~$5 credit</div>
+          <span class="ss-action" onclick="openSettings('anthropic')">Add key →</span>
+        </div>
+        <div class="setup-step" id="ss2">
+          <div class="ss-num" id="ss2-num">2</div>
+          <div class="ss-text">Connect <strong>Reddit</strong> for faster, more reliable results <span style="color:var(--ink4)">(optional)</span></div>
+          <span class="ss-action" onclick="openSettings('reddit')">Connect →</span>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-title">Start your research</div>
+        <div class="form-hint">Two fields. That's all we need to get started.</div>
+
+        <div class="field">
+          <label class="fl" for="f-audience">Target audience <span>— be specific about who they are</span></label>
+          <input class="fi" type="text" id="f-audience" placeholder="e.g. solopreneur moms aged 30–45 who run online businesses" autocomplete="off"/>
+        </div>
+
+        <div class="field">
+          <label class="fl" for="f-goal">How you want to help them <span>— what problem space are you entering?</span></label>
+          <textarea class="fi" id="f-goal" rows="2" placeholder="e.g. save time on weekly meal planning while keeping the family happy"></textarea>
+        </div>
+      </div>
+
+      <!-- API key drawer — single source of truth -->
+      <div class="key-drawer">
+        <div class="kd-trigger" onclick="toggleKeyDrawer()" role="button" aria-expanded="false" id="kd-trigger">
+          <div class="kd-left">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M11 1a4 4 0 014 4 4 4 0 01-4 4 4 4 0 01-3.87-3H3L1 8 3 6H1.5V4H7.13A4 4 0 0111 1z"/><circle cx="11" cy="5" r="1" fill="currentColor" stroke="none"/></svg>
+            Anthropic API key
+            <span class="kd-status" id="kd-status" style="color:var(--ink4)">— not configured</span>
+          </div>
+          <svg class="kd-chevron" id="kd-chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+        <div class="kd-body" id="kd-body">
+          <div class="kd-hint">Free at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> — includes ~$5 credit (~150 free searches). Your key is stored only in your browser and sent directly to Anthropic. We never see it.</div>
+          <div class="kd-wrap">
+            <label for="api-key">API KEY</label>
+            <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" oninput="onKeyInput()"/>
+            <button class="kd-eye" onclick="toggleVis('api-key',this)" aria-label="Show/hide key">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-run" id="btn-run" onclick="startResearch()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6.5 6l4 2.5-4 2.5V6z" fill="currentColor" stroke="none"/></svg>
+        Analyze audience
+      </button>
+      <button class="btn-cancel show" id="btn-cancel" style="display:none;" onclick="cancelRun()">Cancel search</button>
+    </div>
+
+    <!-- ══ PROGRESS VIEW ══ -->
+    <div class="view" id="view-progress">
+      <div class="prog-card">
+        <div class="prog-title">Researching<em>…</em></div>
+        <div class="prog-sub" id="prog-sub">Scanning Reddit for your audience</div>
+        <div class="prog-eta">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;flex-shrink:0"><circle cx="6" cy="6" r="5"/><path d="M6 3.5V6l1.5 1.5"/></svg>
+          Usually takes 30–60 seconds
+        </div>
+
+        <div class="ps run" id="ps1">
+          <div class="ps-ic"><div class="spin"></div></div>
+          <div class="ps-body">
+            <div class="ps-title">Finding relevant communities</div>
+            <div class="ps-detail" id="pd1"></div>
+            <div class="chips" id="pc1"></div>
+          </div>
+        </div>
+        <div class="ps dim" id="ps2">
+          <div class="ps-ic"></div>
+          <div class="ps-body">
+            <div class="ps-title">Validating communities</div>
+            <div class="ps-detail" id="pd2"></div>
+            <div class="chips" id="pc2"></div>
+          </div>
+        </div>
+        <div class="ps dim" id="ps3">
+          <div class="ps-ic"></div>
+          <div class="ps-body">
+            <div class="ps-title">Fetching top posts</div>
+            <div class="ps-detail" id="pd3"></div>
+          </div>
+        </div>
+        <div class="ps dim" id="ps4">
+          <div class="ps-ic"></div>
+          <div class="ps-body">
+            <div class="ps-title">Analyzing with Claude</div>
+            <div class="ps-detail" id="pd4"></div>
+          </div>
+        </div>
+        <div class="ps dim" id="ps5">
+          <div class="ps-ic"></div>
+          <div class="ps-body">
+            <div class="ps-title">Structuring results</div>
+            <div class="ps-detail" id="pd5"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RESULTS VIEW ══ -->
+    <div class="view" id="view-results">
+      <div class="res-header">
+        <div>
+          <div class="res-title">Top <em>5</em> problems</div>
+          <div class="res-meta">
+            <div class="rpill" id="r-posts"></div>
+            <div class="rpill" id="r-subs"></div>
+            <div class="rpill" id="r-aud"></div>
+            <div class="rpill hi" id="r-cache" style="display:none;">⚡ cached</div>
+          </div>
+        </div>
+        <div class="res-acts">
+          <button class="ra" onclick="saveSearch()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M13 11l-5 3-5-3V4l5-3 5 3v7z"/></svg>Save
+          </button>
+          <button class="ra" onclick="openExport()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 12h8M8 8V2M5 5l3-3 3 3"/></svg>Export
+          </button>
+          <button class="ra" onclick="goHome()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M10 13l-5-5 5-5"/></svg>New search
+          </button>
+        </div>
+      </div>
+
+      <div id="problems-list"></div>
+
+      <div class="next-sec">
+        <div class="next-label">What to do next — powered by Claude</div>
+        <div class="next-grid" id="next-grid"></div>
+        <div class="apanel" id="apanel">
+          <div class="apanel-head">
+            <div class="apanel-title" id="apanel-title"></div>
+            <button class="apanel-close" onclick="closePanel()">×</button>
+          </div>
+          <div class="apanel-body" id="apanel-body"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ══ SETTINGS MODAL ══ -->
+<div class="overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Settings</div>
+      <button class="modal-close" onclick="closeSettings()">×</button>
+    </div>
+    <div class="mtabs">
+      <button class="mtab on" id="mtab-a" onclick="switchMTab('a')">Anthropic key</button>
+      <button class="mtab off" id="mtab-r" onclick="switchMTab('r')">Reddit auth</button>
+    </div>
+
+    <!-- Anthropic -->
+    <div class="mpanel on" id="mpanel-a">
+      <div class="hint">Get your free key at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>. Each search costs ~$0.02–$0.04. Your key is stored only in your browser — we never see it.</div>
+      <div class="kfield">
+        <label for="key-modal">ANTHROPIC API KEY</label>
+        <input type="password" id="key-modal" placeholder="sk-ant-api03-..." autocomplete="off"/>
+        <button class="eye" onclick="toggleVis('key-modal',this)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></button>
+      </div>
+      <div class="mbtns">
+        <button class="mbtn-p" onclick="saveKey()">Save key</button>
+        <button class="mbtn-g" onclick="closeSettings()">Close</button>
+      </div>
+    </div>
+
+    <!-- Reddit -->
+    <div class="mpanel" id="mpanel-r">
+      <div class="reddit-status-bar" id="reddit-status-bar">
+        <div class="sb-rdot" id="modal-rdot"></div>
+        <span id="modal-reddit-status">Not connected — using anonymous access (may be slow)</span>
+      </div>
+      <div class="hint" style="margin-bottom:16px;">Reddit authentication unlocks <strong>60 requests/minute</strong> instead of ~1. Setup takes 3 minutes. Your credentials stay in your browser only.</div>
+      <div class="guide">
+        <div class="gstep"><div class="gn">1</div><div class="gtxt">Go to <a href="https://www.reddit.com/prefs/apps" target="_blank" rel="noopener">reddit.com/prefs/apps</a> → click <strong>"create another app"</strong></div></div>
+        <div class="gstep"><div class="gn">2</div><div class="gtxt">Choose type <strong>script</strong>. Name it anything. Redirect URI: <code>http://localhost</code></div></div>
+        <div class="gstep"><div class="gn">3</div><div class="gtxt">Copy the <strong>Client ID</strong> (short code under your app name) and the <strong>Secret</strong></div></div>
+      </div>
+      <div class="kfield">
+        <label for="reddit-cid">CLIENT ID</label>
+        <input type="password" id="reddit-cid" placeholder="14-character code under app name" autocomplete="off"/>
+        <button class="eye" onclick="toggleVis('reddit-cid',this)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></button>
+      </div>
+      <div class="kfield">
+        <label for="reddit-sec">CLIENT SECRET</label>
+        <input type="password" id="reddit-sec" placeholder="Secret string" autocomplete="off"/>
+        <button class="eye" onclick="toggleVis('reddit-sec',this)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg></button>
+      </div>
+      <div class="err-line" id="reddit-err"></div>
+      <div class="mbtns">
+        <button class="mbtn-p" id="btn-reddit-connect" onclick="connectReddit()">Connect & test</button>
+        <button class="mbtn-g" onclick="disconnectReddit()">Disconnect</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPORT MODAL ══ -->
+<div class="overlay" id="modal-export">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head">
+      <div class="modal-title">Export report</div>
+      <button class="modal-close" onclick="closeExport()">×</button>
+    </div>
+    <textarea class="export-ta" id="export-text" readonly></textarea>
+    <div class="mbtns">
+      <button class="mbtn-p" onclick="copyExport()">Copy to clipboard</button>
+      <button class="mbtn-g" onclick="dlExport()">Download .md file</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const STORE = { KEY:'ai_key', RCID:'ai_rcid', RSEC:'ai_rsec', SAVED:'ai_saved', CACHE:'ai_cache_' };
+let state = { result:null, lastCacheKey:null, cancelled:false };
+const reddit = { token:null, exp:0, get ok(){ return !!this.token && Date.now()<this.exp; } };
+
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  const k = ls(STORE.KEY);
+  if (k) { $('api-key').value = k; $('key-modal').value = k; setKeyStatus(true); }
+
+  const cid = ls(STORE.RCID), sec = ls(STORE.RSEC);
+  if (cid && sec) {
+    $('reddit-cid').value = cid;
+    $('reddit-sec').value = sec;
+    getRedditToken(cid, sec).then(() => setRedditUI(true)).catch(() => {});
+  }
+
+  renderSaved();
+  updateSetupSteps();
+});
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const ls = k => localStorage.getItem(k);
+const lss = (k,v) => localStorage.setItem(k, v);
+const lsr = k => localStorage.removeItem(k);
+
+function toast(msg, d=2600) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), d);
+}
+
+function showAlert(type, msg) {
+  if (type === 'error') {
+    $('alert-error-txt').innerHTML = msg;
+    $('alert-error').classList.add('show');
+    $('alert-cache').classList.remove('show');
+  }
+}
+function hideAlerts() {
+  $('alert-error').classList.remove('show');
+  $('alert-cache').classList.remove('show');
+}
+
+function showView(n) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  $('view-'+n).classList.add('on');
+  document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('on'));
+  if (n === 'home') $('nav-home').classList.add('on');
+  $('sidebar').classList.remove('open');
+}
+
+function setStatus(label, busy=false) {
+  $('slabel').textContent = label;
+  $('sdot').classList.toggle('busy', busy);
+}
+
+function toggleSidebar() { $('sidebar').classList.toggle('open'); }
+
+// ═══════════════════════════════════════════════
+// API KEY
+// ═══════════════════════════════════════════════
+function getKey() { return $('api-key').value.trim() || ls(STORE.KEY) || ''; }
+
+function onKeyInput() {
+  const k = $('api-key').value.trim();
+  if (k) { lss(STORE.KEY, k); $('key-modal').value = k; setKeyStatus(true); updateSetupSteps(); }
+}
+
+function setKeyStatus(ok) {
+  const s = $('kd-status');
+  s.textContent = ok ? '— configured ✓' : '— not configured';
+  s.style.color = ok ? 'var(--teal)' : 'var(--ink4)';
+}
+
+function toggleKeyDrawer() {
+  const body = $('kd-body'), chev = $('kd-chev');
+  const open = body.classList.toggle('open');
+  chev.classList.toggle('open', open);
+  $('kd-trigger').setAttribute('aria-expanded', open);
+}
+
+function toggleVis(id, btn) {
+  const el = $(id); el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function saveKey() {
+  const k = $('key-modal').value.trim();
+  $('api-key').value = k;
+  if (k) { lss(STORE.KEY, k); setKeyStatus(true); updateSetupSteps(); }
+  closeSettings(); toast('API key saved');
+}
+
+// ═══════════════════════════════════════════════
+// SETUP STEPS
+// ═══════════════════════════════════════════════
+function updateSetupSteps() {
+  const hasKey = !!getKey();
+  const hasReddit = reddit.ok;
+  toggleSetupStep('ss1', hasKey);
+  toggleSetupStep('ss2', hasReddit);
+  const allDone = hasKey && hasReddit;
+  $('setup-steps').style.display = allDone ? 'none' : 'flex';
+}
+
+function toggleSetupStep(id, done) {
+  const el = $(id), num = $(id+'-num');
+  el.classList.toggle('done', done);
+  num.textContent = done ? '✓' : id.replace('ss','');
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════
+function openSettings(tab='anthropic') {
+  const k = ls(STORE.KEY); if (k) $('key-modal').value = k;
+  const cid = ls(STORE.RCID), sec = ls(STORE.RSEC);
+  if (cid) $('reddit-cid').value = cid;
+  if (sec) $('reddit-sec').value = sec;
+  switchMTab(tab === 'reddit' ? 'r' : 'a');
+  updateModalReddit();
+  $('modal-settings').classList.add('show');
+}
+function closeSettings() { $('modal-settings').classList.remove('show'); }
+
+function switchMTab(t) {
+  ['a','r'].forEach(x => {
+    $('mtab-'+x).className = 'mtab ' + (x===t?'on':'off');
+    $('mpanel-'+x).className = 'mpanel' + (x===t?' on':'');
+  });
+}
+
+// ═══════════════════════════════════════════════
+// REDDIT AUTH
+// ═══════════════════════════════════════════════
+async function getRedditToken(cid, sec) {
+  const res = await fetch('https://www.reddit.com/api/v1/access_token', {
+    method:'POST',
+    headers:{
+      'Authorization':'Basic '+btoa(cid+':'+sec),
+      'Content-Type':'application/x-www-form-urlencoded',
+      'User-Agent':'AudienceIntel/1.0'
+    },
+    body:'grant_type=client_credentials&device_id=DO_NOT_TRACK_THIS_DEVICE'
+  });
+  if (!res.ok) throw new Error(`Reddit rejected credentials (${res.status}). Check your Client ID and Secret.`);
+  const d = await res.json();
+  if (d.error || !d.access_token) throw new Error(d.error || 'No token returned from Reddit.');
+  reddit.token = d.access_token;
+  reddit.exp = Date.now() + ((d.expires_in||3600)-60)*1000;
+  return true;
+}
+
+async function ensureRedditToken() {
+  if (reddit.ok) return true;
+  const cid = ls(STORE.RCID), sec = ls(STORE.RSEC);
+  if (!cid || !sec) return false;
+  try { return await getRedditToken(cid, sec); } catch { return false; }
+}
+
+async function connectReddit() {
+  const cid = $('reddit-cid').value.trim(), sec = $('reddit-sec').value.trim();
+  const err = $('reddit-err'), btn = $('btn-reddit-connect');
+  err.style.display = 'none';
+  if (!cid || !sec) { err.textContent='Please enter both Client ID and Secret.'; err.style.display='block'; return; }
+  btn.textContent='Connecting…'; btn.disabled=true;
+  try {
+    await getRedditToken(cid, sec);
+    lss(STORE.RCID, cid); lss(STORE.RSEC, sec);
+    setRedditUI(true); updateModalReddit(); updateSetupSteps();
+    toast('Reddit connected — 60 req/min unlocked');
+    setTimeout(closeSettings, 700);
+  } catch(e) {
+    err.textContent = e.message; err.style.display='block';
+    btn.textContent='Connect & test'; btn.disabled=false;
+  }
+}
+
+function disconnectReddit() {
+  reddit.token=null; reddit.exp=0;
+  [STORE.RCID,STORE.RSEC].forEach(lsr);
+  $('reddit-cid').value=''; $('reddit-sec').value='';
+  setRedditUI(false); updateModalReddit(); updateSetupSteps();
+  toast('Reddit disconnected');
+}
+
+function setRedditUI(on) {
+  const btn=$('reddit-topbtn'), txt=$('reddit-topbtn-txt');
+  const sdot=$('sb-rdot'), stxt=$('sb-reddit-txt');
+  btn.classList.toggle('on',on);
+  txt.textContent = on?'Reddit connected':'Connect Reddit';
+  sdot.classList.toggle('on',on);
+  stxt.textContent = on?'Reddit — authenticated ✓':'Reddit — not connected';
+  stxt.style.color = on?'var(--teal)':'var(--ink3)';
+}
+
+function updateModalReddit() {
+  const dot=$('modal-rdot'), txt=$('modal-reddit-status');
+  if(!dot||!txt) return;
+  const on=reddit.ok;
+  dot.classList.toggle('on',on);
+  txt.textContent = on
+    ? `Connected · token valid ~${Math.round((reddit.exp-Date.now())/60000)} min · 60 req/min`
+    : 'Not connected — using anonymous access (may be slow)';
+  txt.style.color = on?'var(--teal)':'var(--ink3)';
+  const btn=$('btn-reddit-connect');
+  if(btn){btn.textContent='Connect & test';btn.disabled=false;}
+}
+
+// ═══════════════════════════════════════════════
+// REDDIT FETCHING — routes through Vercel proxy
+// to bypass browser CORS restrictions
+// ═══════════════════════════════════════════════
+const PROXY = 'https://audienceintel-api.vercel.app';
+
+async function fetchSubreddit(sr) {
+  const name = sr.replace(/^r\//,'');
+  const hasToken = await ensureRedditToken();
+
+  // Build proxy URL — pass token as query param if available
+  let proxyUrl = `${PROXY}/api/reddit?subreddit=${encodeURIComponent(name)}`;
+  if (hasToken && reddit.token) {
+    proxyUrl += `&token=${encodeURIComponent(reddit.token)}`;
+  }
+
+  try {
+    const res = await fetch(proxyUrl);
+    if (!res.ok) return null;
+    const d = await res.json();
+    if (d.error) return null;
+    const posts = d?.data?.children||[];
+    if (posts.length<3) return null;
+    return posts.map(p=>({
+      title:p.data.title,
+      text:(p.data.selftext||'').slice(0,380),
+      score:p.data.score,
+      subreddit:p.data.subreddit_name_prefixed
+    }));
+  } catch { return null; }
+}
+
+// ═══════════════════════════════════════════════
+// CLAUDE API
+// ═══════════════════════════════════════════════
+async function claude(messages, system, maxTokens=1600) {
+  const key = getKey();
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,system,messages})
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(e?.error?.message || 'Claude API error '+res.status);
+  }
+  return (await res.json()).content[0].text;
+}
+
+function parseJSON(raw) {
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESS UI
+// ═══════════════════════════════════════════════
+function setStep(n) {
+  for(let i=1;i<=5;i++) {
+    const s=$(('ps'+i)), ic=s.querySelector('.ps-ic');
+    s.classList.remove('run','done','dim');
+    if(i<n){s.classList.add('done');ic.innerHTML='<span class="chk">✓</span>';}
+    else if(i===n){s.classList.add('run');ic.innerHTML='<div class="spin"></div>';}
+    else{s.classList.add('dim');ic.innerHTML='';}
+  }
+}
+function setDetail(n,t){$('pd'+n).textContent=t;}
+function addChip(cid,label,dead=false){
+  const c=$(cid), ch=document.createElement('div');
+  ch.className='chip'+(dead?' dead':'');
+  ch.textContent=label;
+  ch.style.animationDelay=(c.children.length*70)+'ms';
+  c.appendChild(ch);
+}
+function doneAll(){
+  for(let i=1;i<=5;i++){
+    const s=$('ps'+i);
+    s.classList.remove('run','dim');
+    s.classList.add('done');
+    s.querySelector('.ps-ic').innerHTML='<span class="chk">✓</span>';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// CACHE
+// ═══════════════════════════════════════════════
+function cacheKey(a,g){ return STORE.CACHE+btoa(encodeURIComponent((a+'|||'+g).slice(0,180))); }
+function getCache(k){
+  try{
+    const r=JSON.parse(ls(k));
+    if(!r) return null;
+    if(Date.now()-r.ts>7*86400000){lsr(k);return null;}
+    return r;
+  }catch{return null;}
+}
+function setCache(k,d){ try{lss(k,JSON.stringify({...d,ts:Date.now()}));}catch{} }
+function timeAgo(ts){
+  const m=Math.floor((Date.now()-ts)/60000);
+  return m<1?'just now':m<60?m+'m':Math.floor(m/60)+'h';
+}
+function runFresh(){
+  if(state.lastCacheKey) lsr(state.lastCacheKey);
+  $('alert-cache').classList.remove('show');
+  startResearch(true);
+}
+
+// ═══════════════════════════════════════════════
+// MAIN RESEARCH FLOW
+// ═══════════════════════════════════════════════
+function goHome() {
+  showView('home');
+  hideAlerts();
+  $('btn-run').disabled = false;
+  $('btn-cancel').style.display = 'none';
+  setStatus('Ready');
+  $('tb-title').textContent = 'New research session';
+}
+
+function cancelRun() {
+  state.cancelled = true;
+  goHome();
+  toast('Search cancelled');
+}
+
+async function startResearch(skipCache=false) {
+  hideAlerts();
+  const key  = getKey();
+  const aud  = $('f-audience').value.trim();
+  const goal = $('f-goal').value.trim();
+
+  if (!key) {
+    toggleKeyDrawer();
+    showAlert('error','Please add your <strong>Anthropic API key</strong> in the section below the form, then try again.');
+    return;
+  }
+  if (!key.startsWith('sk-ant')) {
+    showAlert('error','That key doesn\'t look right — Anthropic keys start with <code>sk-ant</code>. Double-check and try again.');
+    return;
+  }
+  if (!aud)  { showAlert('error','Please describe your target audience.'); return; }
+  if (!goal) { showAlert('error','Please describe how you want to help them.'); return; }
+
+  lss(STORE.KEY, key); setKeyStatus(true);
+
+  // Cache check
+  const ck = cacheKey(aud, goal); state.lastCacheKey = ck;
+  if (!skipCache) {
+    const cached = getCache(ck);
+    if (cached) {
+      $('alert-cache').classList.add('show');
+      $('cache-age-txt').textContent = timeAgo(cached.ts);
+      $('r-cache').style.display = 'inline-flex';
+      renderResults(cached.problems, cached.subreddits, cached.postCount, aud, goal, true);
+      return;
+    }
+  }
+  $('alert-cache').classList.remove('show');
+  $('r-cache').style.display = 'none';
+
+  // Start
+  state.cancelled = false;
+  $('btn-run').disabled = true;
+  $('btn-cancel').style.display = 'block';
+  setStatus('Running…', true);
+  $('tb-title').textContent = aud.slice(0,46)+(aud.length>46?'…':'');
+
+  for(let i=1;i<=5;i++){$('pd'+i).textContent='';const c=$('pc'+i);if(c)c.innerHTML='';}
+  showView('progress');
+
+  try {
+    // ── Step 1: Subreddit discovery ──
+    setStep(1); setDetail(1,'Asking Claude to identify the best communities…');
+    const srRaw = await claude(
+      [{role:'user',content:`Audience: "${aud}"\nGoal: "${goal}"\n\nList 8 active subreddits (5,000+ members) where this audience actively discusses their problems and frustrations. Return ONLY a JSON array of names without r/ prefix. No explanation.`}],
+      'You are a Reddit research expert. Return only a valid JSON array of subreddit name strings. No markdown, no r/ prefix, no explanation, no comments.'
+    );
+    if(state.cancelled)return;
+
+    let subs;
+    try{subs=parseJSON(srRaw);if(!Array.isArray(subs))throw 0;subs=subs.slice(0,9).map(s=>s.replace(/^r\//,''));}
+    catch{throw new Error('Could not parse community list from Claude. Please try again.');}
+
+    setDetail(1,`Found ${subs.length} candidate communities`);
+    subs.forEach(s=>addChip('pc1','r/'+s));
+
+    // ── Step 2: Validate ──
+    setStep(2);
+    const authMode = reddit.ok ? 'authenticated · 60 req/min' : 'anonymous';
+    setDetail(2,`Checking each community is active (${authMode})…`);
+    const valid=[];
+    for(const sr of subs){
+      if(state.cancelled)return;
+      await new Promise(r=>setTimeout(r,280));
+      const posts = await fetchSubreddit(sr);
+      if(posts&&posts.length>=3){
+        valid.push({sr,posts});
+        addChip('pc2','r/'+sr);
+        setDetail(2,`${valid.length} confirmed active…`);
+      } else {
+        addChip('pc2','r/'+sr+' ✗',true);
+      }
+    }
+    if(!valid.length) throw new Error('No active communities found. Reddit may be rate-limiting. Try again in a moment, or connect Reddit in Settings for faster access.');
+    setDetail(2,`${valid.length} of ${subs.length} communities confirmed active`);
+
+    // ── Step 3: Collect posts ──
+    if(state.cancelled)return;
+    setStep(3);
+    const allPosts = valid.flatMap(v=>v.posts).sort((a,b)=>b.score-a.score).slice(0,72);
+    setDetail(3,`Collected ${allPosts.length} posts from ${valid.length} communities`);
+    const postsText = allPosts.map((p,i)=>`[${i+1}][${p.subreddit}] ${p.title}${p.text?' — '+p.text.slice(0,300):''}`).join('\n');
+    await new Promise(r=>setTimeout(r,300));
+
+    // ── Step 4: Claude analysis ──
+    if(state.cancelled)return;
+    setStep(4); setDetail(4,'Reading posts and identifying recurring patterns…');
+    const raw = await claude(
+      [{role:'user',content:`Audience: "${aud}"\nGoal: "${goal}"\n\nHere are ${allPosts.length} Reddit posts from this audience:\n\n${postsText}\n\nIdentify the TOP 5 most common recurring problems specifically relevant to the goal. Only include High or Medium confidence findings. If fewer than 5 meet this bar, return only what you found.\n\nReturn ONLY a JSON array:\n[{"problem_name":"Memorable name, max 6 words","description":"2–3 clear sentences explaining the problem and why it hurts","frequency":"Very common|Common|Recurring","example_quote":"Realistic synthesized paraphrase of what someone would say — NOT verbatim text","subreddit_source":"subreddit name without r/ prefix","confidence":"High|Medium"}]\n\nNo markdown. Only the JSON array.`}],
+      'You are an expert market researcher identifying audience pain points from social media. Return ONLY valid JSON. No markdown, no preamble, no explanation.',
+      2200
+    );
+    if(state.cancelled)return;
+    setDetail(4,'Analysis complete');
+
+    // ── Step 5: Structure ──
+    setStep(5);
+    let problems;
+    try{problems=parseJSON(raw);if(!Array.isArray(problems)||!problems.length)throw 0;}
+    catch{throw new Error('Could not parse analysis results. Please try again.');}
+
+    const validSubs = valid.map(v=>v.sr);
+    setCache(ck,{problems,subreddits:validSubs,postCount:allPosts.length});
+    setDetail(5,'Saved to cache · expires in 7 days · $0 on repeat searches');
+
+    doneAll();
+    await new Promise(r=>setTimeout(r,420));
+    $('btn-cancel').style.display='none';
+    renderResults(problems,validSubs,allPosts.length,aud,goal,false);
+
+  } catch(err) {
+    if(state.cancelled)return;
+    setStatus('Error');
+    $('btn-run').disabled=false;
+    $('btn-cancel').style.display='none';
+    $('tb-title').textContent='New research session';
+    showView('home');
+    showAlert('error', (err.message||'Something went wrong. Please try again.'));
+  }
+}
+
+// ═══════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════
+function renderResults(problems, subreddits, postCount, aud, goal, fromCache) {
+  setStatus('Done');
+  $('btn-run').disabled=false;
+  $('btn-cancel').style.display='none';
+  $('tb-title').textContent=aud.slice(0,50);
+  state.result={problems,subreddits,postCount,audience:aud,goal};
+
+  $('r-posts').textContent=postCount+' posts';
+  $('r-subs').textContent=subreddits.length+' communities';
+  $('r-aud').textContent=aud.slice(0,28)+(aud.length>28?'…':'');
+  if(fromCache) $('r-cache').style.display='inline-flex';
+
+  const list=$('problems-list'); list.innerHTML='';
+  problems.forEach((p,i)=>{
+    const card=document.createElement('div');
+    card.className='pcard'; card.style.animationDelay=(i*90)+'ms';
+    const confClass = p.confidence==='High'?'bdg-h':'bdg-m';
+    card.innerHTML=`
+      <div class="ph">
+        <div class="pl">
+          <div class="prank">${i+1}</div>
+          <div>
+            <div class="pname">${p.problem_name||'Problem '+(i+1)}</div>
+            ${p.subreddit_source?`<div class="psr">r/${p.subreddit_source.replace(/^r\//,'')}</div>`:''}
+          </div>
+        </div>
+        <div class="pbadges">
+          <div class="bdg bdg-f">${p.frequency||'Common'}</div>
+          ${p.confidence?`<div class="bdg ${confClass}">${p.confidence} confidence</div>`:''}
+        </div>
+      </div>
+      <div class="pdesc">${p.description||''}</div>
+      <div class="qblock">
+        <div class="qtext">"${p.example_quote||''}"</div>
+        <div class="qnote">AI-synthesized example — based on real post patterns, not a verbatim quote</div>
+      </div>`;
+    list.appendChild(card);
+  });
+
+  // Next actions
+  const actions=[
+    {id:'products',icon:'✦',bg:'rgba(45,212,191,.12)',color:'var(--teal)',
+     name:'Generate product ideas',desc:'5 concepts based on these findings',
+     system:'You are a sharp product strategist. Be specific and concrete, not generic.',
+     prompt:`Research about "${aud}":\nTop problem: "${problems[0]?.problem_name}"\nAll problems: ${problems.map(p=>p.problem_name).join(', ')}\n\nGenerate 5 specific product ideas that solve these problems. For each:\n- Product name\n- One-sentence description\n- Pricing model\n- Biggest risk to watch\n\nBe direct and concrete.`},
+    {id:'copy',icon:'◈',bg:'rgba(167,139,250,.12)',color:'var(--purple)',
+     name:'Write landing page copy',desc:'Headline, bullets, CTA in their language',
+     system:'You are an expert direct-response copywriter. Use plain language that speaks to real pain.',
+     prompt:`Audience: "${aud}"\nTop problem: "${problems[0]?.problem_name}"\n${problems[0]?.description}\n\nWrite a complete landing page:\n\nHEADLINE: (under 10 words, address the pain)\nSUBHEADLINE: (one sentence, the promise)\n3 BULLETS: (problem → solution format)\nSOCIAL PROOF: (one placeholder testimonial)\nCTA: (button text)\nFAQ: (2 real objections + direct answers)`},
+    {id:'outreach',icon:'◇',bg:'rgba(251,146,60,.12)',color:'var(--orange)',
+     name:'Draft outreach messages',desc:'Email, Reddit DM, and LinkedIn',
+     system:'You write outreach that sounds human, not like marketing copy. Short, empathetic, direct.',
+     prompt:`Audience: "${aud}"\nProblem: "${problems[0]?.problem_name}"\n${problems[0]?.description}\n\nWrite 3 short outreach messages:\n\n1. COLD EMAIL\nSubject line + 4 sentences max. Lead with the pain.\n\n2. REDDIT DM\n2–3 sentences. Very casual. No pitch.\n\n3. LINKEDIN MESSAGE\n2 sentences. Professional but human.`},
+    {id:'gaps',icon:'◉',bg:'rgba(74,222,128,.12)',color:'var(--green)',
+     name:'Competitor gap analysis',desc:'What existing solutions are missing',
+     system:'You are a sharp market analyst. Give specific, actionable gaps — not generic advice.',
+     prompt:`Audience: "${aud}"\nProblems found:\n${problems.map((p,i)=>`${i+1}. ${p.problem_name} — ${p.description}`).join('\n')}\n\nAnalysis needed:\n1. What do existing solutions fail to address for this audience?\n2. Which problem has the least competition right now?\n3. What is the clearest whitespace opportunity?\n4. What would winning positioning look like in one sentence?`}
+  ];
+
+  const grid=$('next-grid'); grid.innerHTML='';
+  actions.forEach(a=>{
+    const c=document.createElement('div');
+    c.className='ncard'; c.id='nc-'+a.id; c.onclick=()=>runAction(a);
+    c.innerHTML=`<div class="nicon" style="background:${a.bg};color:${a.color}">${a.icon}</div><div><div class="nc-name">${a.name}</div><div class="nc-desc">${a.desc}</div></div>`;
+    grid.appendChild(c);
+  });
+
+  closePanel();
+  showView('results');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══════════════════════════════════════════════
+// RUN ACTION (in-app Claude call)
+// ═══════════════════════════════════════════════
+async function runAction(action) {
+  const key=getKey();
+  if(!key){toast('Add your API key first — open Settings below');return;}
+
+  document.querySelectorAll('.ncard').forEach(c=>{c.classList.remove('running');});
+  const card=$('nc-'+action.id);
+  if(card){card.classList.add('running');card.onclick=null;}
+
+  const panel=$('apanel'), title=$('apanel-title'), body=$('apanel-body');
+  title.textContent=action.name; body.textContent='';
+  panel.classList.add('show');
+  setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+
+  const cur=document.createElement('span'); cur.className='cur'; body.appendChild(cur);
+
+  try {
+    const result = await claude([{role:'user',content:action.prompt}], action.system, 1900);
+    body.textContent='';
+    const words=result.split(' ');
+    let i=0;
+    const iv=setInterval(()=>{
+      if(i>=words.length){clearInterval(iv);if(card){card.classList.remove('running');card.onclick=()=>runAction(action);}return;}
+      body.textContent+=(i>0?' ':'')+words[i++];
+      if(i%25===0)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    },16);
+  } catch(err) {
+    body.textContent='Error: '+(err.message||'Something went wrong. Please try again.');
+    if(card){card.classList.remove('running');card.onclick=()=>runAction(action);}
+  }
+}
+
+function closePanel() {
+  $('apanel').classList.remove('show');
+  document.querySelectorAll('.ncard').forEach(c=>c.classList.remove('running'));
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════════════
+function saveSearch() {
+  if(!state.result)return;
+  const saved=JSON.parse(ls(STORE.SAVED)||'[]');
+  if(saved.find(s=>s.audience===state.result.audience&&s.goal===state.result.goal)){toast('Already saved');return;}
+  saved.unshift({id:Date.now(),...state.result,ts:Date.now()});
+  lss(STORE.SAVED,JSON.stringify(saved.slice(0,20)));
+  renderSaved(); toast('Saved to sidebar');
+}
+
+function deleteSaved(id, e) {
+  e.stopPropagation();
+  const saved=JSON.parse(ls(STORE.SAVED)||'[]').filter(s=>s.id!==id);
+  lss(STORE.SAVED,JSON.stringify(saved));
+  renderSaved(); toast('Removed');
+}
+
+function loadSaved(id) {
+  const s=JSON.parse(ls(STORE.SAVED)||'[]').find(x=>x.id===id);
+  if(!s)return;
+  $('f-audience').value=s.audience; $('f-goal').value=s.goal;
+  $('alert-cache').classList.remove('show');
+  $('r-cache').style.display='none';
+  renderResults(s.problems,s.subreddits,s.postCount,s.audience,s.goal,true);
+}
+
+function renderSaved() {
+  const saved=JSON.parse(ls(STORE.SAVED)||'[]');
+  const list=$('saved-list'), lbl=$('saved-section-label');
+  if(!saved.length){list.innerHTML='';lbl.style.display='none';return;}
+  lbl.style.display='';
+  list.innerHTML=saved.map(s=>`
+    <div class="si" onclick="loadSaved(${s.id})">
+      <div class="si-main">
+        <div class="si-name">${s.audience.slice(0,34)}${s.audience.length>34?'…':''}</div>
+        <div class="si-meta">${new Date(s.ts).toLocaleDateString()} · ${s.postCount||0} posts</div>
+      </div>
+      <button class="si-del" onclick="deleteSaved(${s.id},event)" title="Remove" aria-label="Remove saved search">×</button>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════
+function openExport() {
+  if(!state.result)return;
+  $('export-text').value=buildReport();
+  $('modal-export').classList.add('show');
+}
+function closeExport(){$('modal-export').classList.remove('show');}
+function copyExport(){navigator.clipboard?.writeText($('export-text').value).then(()=>toast('Copied to clipboard'));}
+function dlExport(){
+  const blob=new Blob([$('export-text').value],{type:'text/markdown'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=`audience-intel-${Date.now()}.md`;a.click();URL.revokeObjectURL(url);
+  toast('Downloaded');
+}
+function buildReport() {
+  if(!state.result)return'';
+  const{audience,goal,problems,subreddits,postCount}=state.result;
+  const date=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  let md=`# Audience Research Report\n\n`;
+  md+=`| | |\n|---|---|\n| **Audience** | ${audience} |\n| **Goal** | ${goal} |\n| **Date** | ${date} |\n| **Data** | ${postCount} posts · ${subreddits.length} communities |\n\n---\n\n## Top Problems Found\n\n`;
+  problems.forEach((p,i)=>{
+    md+=`### ${i+1}. ${p.problem_name}\n\n`;
+    md+=`**Frequency:** ${p.frequency} &nbsp;·&nbsp; **Confidence:** ${p.confidence||'N/A'}\n\n`;
+    md+=`${p.description}\n\n`;
+    md+=`> *"${p.example_quote}"*\n> *(AI-synthesized — based on real post patterns, not verbatim)*\n\n`;
+    if(p.subreddit_source)md+=`Most discussed in: r/${p.subreddit_source.replace(/^r\//,'')}\n\n`;
+    md+=`---\n\n`;
+  });
+  md+=`## Communities Analyzed\n\n${subreddits.map(s=>`- r/${s.replace(/^r\//,'')}`).join('\n')}\n\n`;
+  md+=`---\n*Generated by AudienceIntel · Quotes are AI-synthesized representative examples, not verbatim citations.*\n`;
+  return md;
+}
+
+// ═══════════════════════════════════════════════
+// CLOSE ON BACKDROP CLICK
+// ═══════════════════════════════════════════════
+['modal-settings','modal-export'].forEach(id=>{
+  $(id).addEventListener('click',e=>{if(e.target.id===id){closeSettings();closeExport();}});
+});
+</script>
+</body>
+</html>
