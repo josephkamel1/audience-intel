@@ -818,36 +818,38 @@ function updateModalReddit() {
   if(btn){btn.textContent='Connect & test';btn.disabled=false;}
 }
 
-// ═══════════════════════════════════════════════
-// REDDIT FETCHING — routes through Vercel proxy
-// to bypass browser CORS restrictions
-// ═══════════════════════════════════════════════
+// REDDIT FETCHING - proxy with fallback
 const PROXY = 'https://audienceintel-api.vercel.app';
 
 async function fetchSubreddit(sr) {
   const name = sr.replace(/^r\//,'');
   const hasToken = await ensureRedditToken();
+  const proxyUrl = PROXY + '/api/reddit?subreddit=' + encodeURIComponent(name) +
+    (hasToken && reddit.token ? '&token=' + encodeURIComponent(reddit.token) : '');
+  const directUrl = 'https://www.reddit.com/r/' + name + '/hot.json?limit=25';
 
-  // Build proxy URL — pass token as query param if available
-  let proxyUrl = `${PROXY}/api/reddit?subreddit=${encodeURIComponent(name)}`;
-  if (hasToken && reddit.token) {
-    proxyUrl += `&token=${encodeURIComponent(reddit.token)}`;
+  for (const url of [proxyUrl, directUrl]) {
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 9000);
+      const headers = {};
+      if (url === directUrl) headers['User-Agent'] = 'AudienceIntel/1.0';
+      const res = await fetch(url, { signal: controller.signal, headers });
+      clearTimeout(tid);
+      if (!res.ok) continue;
+      const d = await res.json();
+      if (d.error) continue;
+      const posts = d && d.data && d.data.children ? d.data.children : [];
+      if (posts.length < 3) continue;
+      return posts.map(function(p) { return {
+        title: p.data.title,
+        text: (p.data.selftext || '').slice(0, 380),
+        score: p.data.score,
+        subreddit: p.data.subreddit_name_prefixed
+      }; });
+    } catch(e) { continue; }
   }
-
-  try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) return null;
-    const d = await res.json();
-    if (d.error) return null;
-    const posts = d?.data?.children||[];
-    if (posts.length<3) return null;
-    return posts.map(p=>({
-      title:p.data.title,
-      text:(p.data.selftext||'').slice(0,380),
-      score:p.data.score,
-      subreddit:p.data.subreddit_name_prefixed
-    }));
-  } catch { return null; }
+  return null;
 }
 
 // ═══════════════════════════════════════════════
